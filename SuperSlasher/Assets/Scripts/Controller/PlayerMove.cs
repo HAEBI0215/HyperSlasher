@@ -5,59 +5,90 @@ using UnityEngine;
 public class PlayerMove : MonoBehaviour
 {
     [Header("움직임")]
-    public float runSpeed = 12f;
-    public float runMag = 1.5f;
-    public float accelerationTime = 0.5f;
-    public float walkSpeed = 6f;
+    public float runSpeed = 8f;
+    public float sprintSpeed = 15f;
+    public float accelerationTime = 1f;
     public float rotateSpeed = 10f;
 
     [Header("점프")]
     public float jumpForce = 7f;
-    public float gravity = 3.6f;
+    public float gravity = 1f;
 
     [Header("키")]
     public KeyCode runKey = KeyCode.LeftShift;
     public KeyCode jumpKey = KeyCode.Space;
 
-    public float currentSpeed = 0.0f;
+    public float currentSpeed = 0f;
     public bool isRunning = false;
     public bool isGrounded = true;
+    private bool isSprintAnim = false;
 
+    [Header("지면 체크")]
     public LayerMask groundLayer;
-    public float groundDistance = 10.2f;
-    private Vector2 moveInput;
+    public float groundDistance = 0.3f;
     public Transform groundCheck;
+
+    [Header("참조")]
     public Rigidbody rb;
     public Transform camPos;
+    public Animator anim;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    private Vector2 moveInput;
 
-    // Update is called once per frame
     void Update()
     {
         moveInput = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+        float inputMagnitude = moveInput.magnitude;
 
-        isGrounded = Physics.SphereCast(groundCheck.position, 0.2f, Vector3.down, out RaycastHit hit, groundDistance, groundLayer);
+        isRunning = Input.GetKey(runKey);
 
-        isRunning = Input.GetKey(KeyCode.LeftShift);
-        float targetSpeed = isRunning ? runSpeed : walkSpeed;
+        isGrounded = Physics.SphereCast(groundCheck.position, 0.2f, Vector3.down, out _, groundDistance, groundLayer);
+
+        float targetSpeed = 0f;
+        if (inputMagnitude > 0.1f)
+        {
+            targetSpeed = isRunning ? sprintSpeed : runSpeed;
+        }
 
         currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime / accelerationTime);
-        
+
         if (Input.GetKeyDown(jumpKey))
         {
             Jump();
         }
-        rb.AddForce(Vector3.down * gravity, ForceMode.Acceleration);
-    }
 
-    void Move(Vector2 input)
-    {
-        moveInput = input;
+        rb.AddForce(Vector3.down * gravity, ForceMode.Acceleration);
+
+        if (isRunning || currentSpeed > 10f)
+        {
+            isSprintAnim = true;
+        }
+        else
+        {
+            isSprintAnim = false;
+        }
+
+        float speedPercent = 0f;
+        if (inputMagnitude > 0.1f)
+        {
+            speedPercent = isSprintAnim ? 1f : 0.6f;
+        }
+
+        anim.SetFloat("Speed", speedPercent, 0.1f, Time.deltaTime);
+        anim.SetBool("IsRunning", isSprintAnim);
+        anim.SetBool("IsGrounded", isGrounded);
+        anim.SetFloat("VelocityY", rb.velocity.y);
+
+        float animSpeed = currentSpeed / runSpeed;
+
+        if (isSprintAnim)
+        {
+            animSpeed *= 1f;
+        }
+
+        animSpeed = Mathf.Clamp(animSpeed, 0f, 1.2f);
+
+        anim.SetFloat("AnimSpeed", animSpeed);
     }
 
     void FixedUpdate()
@@ -76,35 +107,31 @@ public class PlayerMove : MonoBehaviour
         Vector3 velocity = move * currentSpeed;
         velocity.y = rb.velocity.y;
 
-        if (move != Vector3.zero)
+        if (move.sqrMagnitude > 0.001f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(move);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 
-            rotateSpeed * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                targetRotation,
+                rotateSpeed * Time.deltaTime
+            );
         }
 
         rb.velocity = velocity;
+
         if (rb.velocity.y < 0)
         {
             rb.velocity += Vector3.up * gravity * 2f * Time.deltaTime;
         }
     }
 
-    public void SetRunSpeed(float mag)
-    {
-        runMag += mag;
-        runSpeed = walkSpeed * runMag;
-    }
-
     public void Jump()
     {
-        if (isGrounded == false)
-            return;
-        
-        if (isGrounded)
-        {
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            isGrounded = false;
-        }
+        if (!isGrounded) return;
+
+        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+        isGrounded = false;
+
+        anim.SetTrigger("Jump");
     }
 }

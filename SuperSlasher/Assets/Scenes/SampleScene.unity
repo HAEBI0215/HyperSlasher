@@ -254,7 +254,7 @@ Transform:
   m_GameObject: {fileID: 36092114}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 39.324066, y: 12.19, z: -59.86567}
+  m_LocalPosition: {x: 37.72113, y: 2.0919998, z: -49.725838}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -451,7 +451,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 184692647}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.04035283, y: -0.000000024171882, z: 9.761992e-10, w: 0.9991855}
+  m_LocalRotation: {x: 0.040175546, y: -0.09359029, z: 0.003779723, w: 0.9947927}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -546,9 +546,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.040352825, y: -0.000000038533972, z: 0.0000000015562223,
-    w: 0.9991855}
-  m_LocalPosition: {x: 39.324066, y: 12.19, z: -59.86567}
+  m_LocalRotation: {x: 0.040175542, y: -0.0935903, z: 0.0037797228, w: 0.9947927}
+  m_LocalPosition: {x: 37.72113, y: 2.0919998, z: -49.725838}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1231,7 +1230,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1156823565}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.058520798, y: -0.000000003309744, z: 1.9402066e-10, w: 0.99828625}
+  m_LocalRotation: {x: 0.058263674, y: -0.09350606, z: 0.005481458, w: 0.9938974}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1737,17 +1736,17 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 81bb9eea30387e442899949a80011e55,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 38.88
+      value: 36.96
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 81bb9eea30387e442899949a80011e55,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 10.493
+      value: 0.395
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 81bb9eea30387e442899949a80011e55,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -58.25
+      value: -48.14
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 81bb9eea30387e442899949a80011e55,
         type: 3}
@@ -1799,6 +1798,11 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[1]
       value: 
       objectReference: {fileID: 2100000, guid: 945e2f586a1a63a49a99d9080a8e9f24, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 81bb9eea30387e442899949a80011e55,
+        type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 0b6fa6c0e4af536459db3287006d0ab7, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -1846,10 +1850,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c0ad489e390b7f4cb8bb2de8948d111, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  runSpeed: 12
-  runMag: 1.5
-  accelerationTime: 0.5
-  walkSpeed: 6
+  runSpeed: 8
+  sprintSpeed: 15
+  accelerationTime: 1
   rotateSpeed: 10
   jumpForce: 7
   gravity: 1
@@ -1865,6 +1868,7 @@ MonoBehaviour:
   groundCheck: {fileID: 363006194}
   rb: {fileID: 1571477279}
   camPos: {fileID: 330585546}
+  anim: {fileID: 1571477280}
 --- !u!54 &1571477279
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1892,6 +1896,12 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!95 &1571477280 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 81bb9eea30387e442899949a80011e55,
+    type: 3}
+  m_PrefabInstance: {fileID: 1571477275}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1636841386
 GameObject:
   m_ObjectHideFlags: 3
@@ -2061,9 +2071,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   runSpeed: 8
-  runMag: 1.5
+  sprintSpeed: 12
   accelerationTime: 0.5
-  walkSpeed: 4
   rotateSpeed: 10
   jumpForce: 5
   gravity: -9.81
@@ -2079,6 +2088,7 @@ MonoBehaviour:
   groundCheck: {fileID: 363006194}
   rb: {fileID: 0}
   camPos: {fileID: 0}
+  anim: {fileID: 0}
 --- !u!1 &1731330246
 GameObject:
   m_ObjectHideFlags: 0
@@ -2255,7 +2265,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1744324546}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.022219505, y: 2.2156051e-16, z: -7.197102e-17, w: 0.9997531}
+  m_LocalRotation: {x: 0.022121944, y: -0.09364346, z: 0.0020812368, w: 0.9953578}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
