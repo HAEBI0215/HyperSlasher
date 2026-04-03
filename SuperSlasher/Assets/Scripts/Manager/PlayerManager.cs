@@ -4,14 +4,37 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
-    // Start is called before the first frame update
+    [Header("체력")]
+    public int maxPlayerHp = 100;
+    public int currentPlayerHp;
+
+    [Header("스킬")]
+    public float skillGauge = 0.0f;
+    public float maxSkillGauge = 100.0f;
+    public SkillControll skillControll;
+
     void Start()
     {
-        
+        currentPlayerHp = maxPlayerHp;
     }
 
-    // Update is called once per frame
     void Update()
+    {
+        ExcuteSkill();
+    }
+
+    private void ExcuteSkill()
+    {
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            skillControll.RushSlash(0);
+        }
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            skillControll.ThrowsScythe(1);
+        }
+    }
+    private void LoadSkillData(int index)
     {
         
     }
