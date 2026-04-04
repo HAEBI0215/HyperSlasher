@@ -123,5 +123,13 @@ public abstract class AfterImageBase : MonoBehaviour
         UpdateColor();
     }
 
+    public void CallBakeExternal(Vector3 pos, Quaternion rot)
+    {
+        transform.position = pos;
+        transform.rotation = rot;
+
+        BakeImage();
+    }
+
     #endregion
 }
