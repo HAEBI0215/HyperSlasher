@@ -5,8 +5,7 @@ using UnityEngine;
 public class PlayerMove : MonoBehaviour
 {
     [Header("움직임")]
-    public float runSpeed = 8f;
-    public float sprintSpeed = 15f;
+    public float runSpeed = 15f;
     public float hyperSprintSpeed = 30f;
     public float accelerationTime = 1f;
     public float rotateSpeed = 10f;
@@ -15,7 +14,6 @@ public class PlayerMove : MonoBehaviour
     public float hyperSprintGauge = 0.0f;
     public float maxHyperSprintGauge = 100.0f;
     public float hyperSprintCost = 5.0f;
-
     public bool isSkillReady = false;
 
     [Header("에프터 이미지")]
@@ -23,16 +21,15 @@ public class PlayerMove : MonoBehaviour
 
     [Header("점프")]
     public float jumpForce = 7f;
-    public float gravity = 1f;
+    public float fallGravityMultiplier = 2f;
 
     [Header("키")]
-    public KeyCode runKey = KeyCode.LeftShift;
     public KeyCode jumpKey = KeyCode.Space;
+    public KeyCode hyperSprintKey = KeyCode.LeftShift;
 
     public float currentSpeed = 0f;
-    public bool isRunning = false;
     public bool isGrounded = true;
-    private bool isSprintAnim = false;
+    private bool isHyperSprinting = false;
 
     [Header("지면 체크")]
     public LayerMask groundLayer;
@@ -50,25 +47,30 @@ public class PlayerMove : MonoBehaviour
     void Start()
     {
         hyperSprintGauge = maxHyperSprintGauge;
-        if (hyperSprintGauge <= 0)
-        {
-            isSkillReady = false;
-            return;
-        }
-        else if (hyperSprintGauge >= 0)
-        {
-            isSkillReady = true;
-        }
+        isSkillReady = hyperSprintGauge > 0f;
     }
 
     void Update()
     {
         moveInput = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+        moveInput = Vector2.ClampMagnitude(moveInput, 1f);
+
         float inputMagnitude = moveInput.magnitude;
 
-        isRunning = Input.GetKey(runKey);
+        isGrounded = Physics.SphereCast(
+            groundCheck.position,
+            0.2f,
+            Vector3.down,
+            out _,
+            groundDistance,
+            groundLayer
+        );
 
-        bool isHyperSprinting = isRunning && Input.GetKey(KeyCode.R) && isSkillReady && inputMagnitude > 0.1f;
+        isHyperSprinting =
+            Input.GetKey(hyperSprintKey) &&
+            isSkillReady &&
+            inputMagnitude > 0.1f;
+
         foreach (var script in afterImage)
         {
             if (script != null)
@@ -77,19 +79,11 @@ public class PlayerMove : MonoBehaviour
             }
         }
 
-        isGrounded = Physics.SphereCast(groundCheck.position, 0.2f, Vector3.down, out _, groundDistance, groundLayer);
-
         float targetSpeed = 0f;
+
         if (inputMagnitude > 0.1f)
         {
-            if (isHyperSprinting) 
-            {
-                targetSpeed = hyperSprintSpeed;
-            }
-            else 
-            {
-                targetSpeed = isRunning ? sprintSpeed : runSpeed;
-            }
+            targetSpeed = isHyperSprinting ? hyperSprintSpeed : runSpeed;
         }
 
         currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime / accelerationTime);
@@ -97,46 +91,30 @@ public class PlayerMove : MonoBehaviour
         if (isHyperSprinting)
         {
             hyperSprintGauge -= hyperSprintCost * Time.deltaTime;
-            if (hyperSprintGauge <= 0) 
+
+            if (hyperSprintGauge <= 0f)
             {
-                hyperSprintGauge = 0;
+                hyperSprintGauge = 0f;
                 isSkillReady = false;
+                isHyperSprinting = false;
             }
-        }
-
-        rb.AddForce(Vector3.down * gravity, ForceMode.Acceleration);
-
-        if (isRunning || currentSpeed > 10f)
-        {
-            isSprintAnim = true;
-        }
-        else
-        {
-            isSprintAnim = false;
         }
 
         float speedPercent = 0f;
         if (inputMagnitude > 0.1f)
         {
-            speedPercent = isSprintAnim ? 1f : 0.6f;
+            speedPercent = isHyperSprinting ? 1f : 0.6f;
         }
 
         anim.SetFloat("Speed", speedPercent, 0.1f, Time.deltaTime);
-        anim.SetBool("IsRunning", isSprintAnim);
+        anim.SetBool("IsRunning", isHyperSprinting);
         anim.SetBool("IsGrounded", isGrounded);
         anim.SetFloat("VelocityY", rb.velocity.y);
 
         float animSpeed = currentSpeed / runSpeed;
-
-        if (isSprintAnim)
-        {
-            animSpeed *= 1f;
-        }
-
         animSpeed = Mathf.Clamp(animSpeed, 0f, 1.2f);
-
         anim.SetFloat("AnimSpeed", animSpeed);
-        HyperSprint();
+
         if (Input.GetKeyDown(jumpKey))
         {
             Jump();
@@ -158,6 +136,7 @@ public class PlayerMove : MonoBehaviour
 
         Vector3 velocity = move * currentSpeed;
         velocity.y = rb.velocity.y;
+        rb.velocity = velocity;
 
         if (move.sqrMagnitude > 0.001f)
         {
@@ -165,15 +144,13 @@ public class PlayerMove : MonoBehaviour
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
                 targetRotation,
-                rotateSpeed * Time.deltaTime
+                rotateSpeed * Time.fixedDeltaTime
             );
         }
 
-        rb.velocity = velocity;
-
-        if (rb.velocity.y < 0)
+        if (rb.velocity.y < 0f)
         {
-            rb.velocity += Vector3.up * gravity * 2f * Time.deltaTime;
+            rb.velocity += Vector3.down * fallGravityMultiplier * Time.fixedDeltaTime;
         }
     }
 
@@ -181,19 +158,13 @@ public class PlayerMove : MonoBehaviour
     {
         if (!isGrounded) return;
 
+        Vector3 velocity = rb.velocity;
+        velocity.y = 0f;
+        rb.velocity = velocity;
+
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         isGrounded = false;
 
         anim.SetTrigger("Jump");
-    }
-
-    public void HyperSprint()
-    {
-        if (Input.GetKey(KeyCode.LeftShift) && Input.GetKey(KeyCode.R) && isSkillReady)
-        {
-            currentSpeed = hyperSprintSpeed;
-            hyperSprintGauge -= hyperSprintCost * Time.deltaTime;
-            if (hyperSprintGauge <= 0) isSkillReady = false;
-        }
     }
 }
