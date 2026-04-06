@@ -10,6 +10,10 @@ public class PlayerMove : MonoBehaviour
     public float accelerationTime = 1f;
     public float rotateSpeed = 10f;
 
+    [Header("전투 회전")]
+    public bool useCombatRotate = true;
+    public KeyCode combatKey = KeyCode.Mouse1; // 우클릭 누르면 카메라 방향 바라봄
+
     [Header("스킬")]
     public float hyperSprintGauge = 0.0f;
     public float maxHyperSprintGauge = 100.0f;
@@ -38,7 +42,7 @@ public class PlayerMove : MonoBehaviour
 
     [Header("참조")]
     public Rigidbody rb;
-    public Transform camPos;
+    public Transform camPos; // 여기엔 MainCamera 말고 FollowPos 넣기
     public Animator anim;
     public PlayerManager pm;
 
@@ -48,11 +52,17 @@ public class PlayerMove : MonoBehaviour
     {
         hyperSprintGauge = maxHyperSprintGauge;
         isSkillReady = hyperSprintGauge > 0f;
+
+        if (rb != null)
+        {
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        }
     }
 
     void Update()
     {
-        moveInput = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+        moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         moveInput = Vector2.ClampMagnitude(moveInput, 1f);
 
         float inputMagnitude = moveInput.magnitude;
@@ -74,9 +84,7 @@ public class PlayerMove : MonoBehaviour
         foreach (var script in afterImage)
         {
             if (script != null)
-            {
                 script.enabled = isHyperSprinting;
-            }
         }
 
         float targetSpeed = 0f;
@@ -133,24 +141,51 @@ public class PlayerMove : MonoBehaviour
         camRight.Normalize();
 
         Vector3 move = camRight * moveInput.x + camForward * moveInput.y;
+        move.Normalize();
 
         Vector3 velocity = move * currentSpeed;
         velocity.y = rb.velocity.y;
         rb.velocity = velocity;
 
-        if (move.sqrMagnitude > 0.001f)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(move);
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                rotateSpeed * Time.fixedDeltaTime
-            );
-        }
+        RotatePlayer(move);
 
         if (rb.velocity.y < 0f)
         {
-            rb.velocity += Vector3.down * fallGravityMultiplier * Time.fixedDeltaTime;
+            rb.velocity += Physics.gravity * (fallGravityMultiplier - 1f) * Time.fixedDeltaTime;
+        }
+    }
+
+    void RotatePlayer(Vector3 move)
+    {
+        bool isCombatRotating = useCombatRotate && Input.GetKey(combatKey);
+
+        if (isCombatRotating)
+        {
+            Vector3 faceDir = camPos.forward;
+            faceDir.y = 0f;
+            faceDir.Normalize();
+
+            if (faceDir.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(faceDir);
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
+                    targetRotation,
+                    rotateSpeed * Time.fixedDeltaTime
+                );
+            }
+        }
+        else
+        {
+            if (move.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(move);
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
+                    targetRotation,
+                    rotateSpeed * Time.fixedDeltaTime
+                );
+            }
         }
     }
 
