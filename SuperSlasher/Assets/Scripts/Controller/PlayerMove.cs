@@ -120,7 +120,7 @@ public class PlayerMove : MonoBehaviour
         anim.SetFloat("VelocityY", rb.velocity.y);
 
         float animSpeed = currentSpeed / runSpeed;
-        animSpeed = Mathf.Clamp(animSpeed, 0f, 1.2f);
+        animSpeed = Mathf.Clamp(animSpeed, 0f, 0.8f);
         anim.SetFloat("AnimSpeed", animSpeed);
 
         if (Input.GetKeyDown(jumpKey))
